@@ -1,0 +1,49 @@
+name: Build iOS IPA
+
+# 手动触发或推送到 main 分支时，在云端 Mac 上构建正品音乐 iOS 待签名包
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ios-unsigned:
+    name: Build unsigned iOS IPA
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Show build environment
+        run: |
+          echo "Xcode: $(xcodebuild -version | head -n 1)"
+          echo "Go: $(go version)"
+          echo "SDK: $(xcrun --sdk iphoneos --show-sdk-version)"
+
+      - name: Build unsigned iOS package
+        env:
+          IOS_UNSIGNED_ONLY: "1"
+          IOS_APP_ID: "com.zhengpin.music"
+          IOS_VERSION: "1.0.0"
+        run: |
+          chmod +x package_ios.sh
+          ./package_ios.sh
+
+      - name: Verify IPA structure
+        run: |
+          ls -lh music-dl-ios-unsigned.ipa
+          unzip -l music-dl-ios-unsigned.ipa | grep -E 'Payload/[^/]+\.app/(Info\.plist|MusicDL)$'
+
+      - name: Upload unsigned IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhengpin-music-ios-unsigned
+          path: music-dl-ios-unsigned.ipa
+          retention-days: 30

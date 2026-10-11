@@ -31,7 +31,7 @@ jobs:
         env:
           IOS_UNSIGNED_ONLY: "1"
           IOS_APP_ID: "com.zhengpin.music"
-          IOS_VERSION: "1.0.0"
+          IOS_VERSION: "1.0.0.1"
         run: |
           chmod +x package_ios.sh
           ./package_ios.sh
